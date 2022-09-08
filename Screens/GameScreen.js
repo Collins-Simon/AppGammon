@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View , TouchableOpacity} from 'react-native'
+import { StyleSheet, Text, View , TouchableOpacity, Alert} from 'react-native'
 import React, { useState, useEffect } from 'react'
 
+import { getDatabase, ref, child, get, onValue, set } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
 
 export default function GameScreen({route, navigation }) {
 
@@ -20,14 +22,66 @@ export default function GameScreen({route, navigation }) {
 
    
     
-    const endGame = () => {
-        console.log("Game Ended");
+    const endGame =async () => {
+        let winner;
+        Alert.alert(
+            "Winner",
+            "Who won?",
+            [
+              {
+                text: route.params.player1,
+                onPress: () => winner = route.params.player1,
+                style: "cancel"
+              },
+              { 
+                text: route.params.player2,
+                 onPress: () => winner = route.params.player2,
+         }
+            ]
+          );
+
+        const auth = getAuth();
+        const userId = auth.currentUser.uid;
+        
+        
+        console.log("end game pressed");
+        const db = getDatabase();
+        //if there isn't a gameID then create a new game
+        const gameID = route.params.gameID != null ? Math.floor(Math.random() * 100000) : route.params.gameID;
+
+
+        const reference1 = ref(db, 'users/' + userId + "/");
+        set(reference1, {
+            player1: route.params.player1,
+            player2: route.params.player2,
+
+
+        });
+        const reference2 = ref(db, 'users/' + userId + "/games/" + gameID + "/");
+        set(reference2, {
+            rolls: rolls,
+            doubles: doubles,
+
+        });
+
+        console.log("After get firestore");
+        navigation.navigate('Home');
+        
+
     }
     const advanceTurn = () => {
-        console.log("------------------");
+
+        if(turn === 1){
+            const [left, right] = getOrAddrandomroll(turn - 1, rolls);
+            setLeftDice(left);
+            setRightDice(right);
+            setTurn(2);
+            return;
+
+        }
         if(rightDice != undefined && leftDice === rightDice){
             
-            console.log("doubles");
+
             setDoublepos(doublepos + 1);
             const [left, right] = getOrAddrandomroll(doublepos - 1, doubles);
             setLeftDice(left);
@@ -37,9 +91,7 @@ export default function GameScreen({route, navigation }) {
             const [left, right] = getOrAddrandomroll(turn - 1, rolls);
             setLeftDice(left);
             setRightDice(right);
-            console.log("turn: " + turn)
-            
-            console.log("rolls.length: " + rolls.length/2)
+
             if(turn % 2){
                 setPlayer(route.params.player2);
                 setColor(route.secondPlayerColor);
@@ -49,11 +101,6 @@ export default function GameScreen({route, navigation }) {
             }
         }
     }
-
-    useEffect(()=>{
-        console.log("useEffect");
-        advanceTurn();
-    }, [])
 
 
   return (
