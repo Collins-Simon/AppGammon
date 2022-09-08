@@ -1,32 +1,24 @@
 import { StyleSheet, Text, View, KeyboardAvoidingView, TextInput, TouchableOpacity, Alert} from 'react-native'
 import React from 'react'
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function RegisterScreen({navigation }) {
     const [player1, setPlayer1] = React.useState('')
     const [player2, setPlayer2] = React.useState('')
 
-    React.useEffect(
-        () =>
-          navigation.addListener('beforeRemove', (e) => {
-            e.preventDefault();
-          }),
-        [navigation]
-      );
+
     const saveNamesAndmoveToGame = async () => {
         if (player1 === '' || player2 === '') {
             Alert.alert('Please enter both names')
         } else {
-            await AsyncStorage.setItem('player1', player1)
-            await AsyncStorage.setItem('player2', player2)
             navigation.navigate('NewGame', {
                 player1: player1,
                 player2: player2,
                 gameID: "",
                 moves: [],
                 doubles: [],
-                doublepos: 0,
-                turn: 0,
+                doublepos: 1,
+                turn: 1,
                 lastDatePlayed: new Date().getTime(),
                 createdDate: new Date().toDateString(),
 
